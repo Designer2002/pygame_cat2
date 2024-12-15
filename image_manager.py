@@ -9,7 +9,7 @@ def make_image(container, tile_size, components):
         for x, y in components[key]:
             img.paste(texture, (x*tile_size[0], y*tile_size[1]), mask=texture)
 
-    img.save(BASE_DIR / "resources" / "images" / "map.png")
+    img.save(BASE_DIR / "resources" / "images" / "map.jpg")
 
 
 

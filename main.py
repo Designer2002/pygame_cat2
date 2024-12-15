@@ -24,14 +24,14 @@ def run():
 
 
     generator.run_generation(TILE_SIZE)
-    img = pg.image.load(BASE_DIR / "resources" / "images" / "map.png").convert()
+    img = pg.image.load(BASE_DIR / "resources" / "images" / "map.jpg").convert()
     img_rect = img.get_rect()
 
     entity_sprites = pg.sprite.Group()
 
     hero = Player(generator.start[0], generator.start[1])
 
-    camera = Camera(img_rect.width, img_rect.height)
+    camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT, screen_surface)
 
     entity_sprites.add(hero)
 
@@ -62,12 +62,16 @@ def run():
 
         screen_surface.fill(WHITE)
 
-        screen_surface.blit(img, img_rect)
-        camera.update(hero, SCREEN_WIDTH, SCREEN_HEIGHT)
+        screen_surface.blit(img, camera.camera)
 
-        entity_sprites.draw(screen_surface)
+        #camera.update(hero)
 
+        for sprite in entity_sprites:
+            # Используем метод apply для смещения позиции спрайта
+            screen_surface.blit(sprite.image, camera.apply(sprite))
 
+        # Отрисовка героя с учетом камеры
+        screen_surface.blit(hero.image, camera.apply(hero))
 
         for event in pg.event.get():
 
@@ -104,7 +108,7 @@ def run():
             if event.type == pg.QUIT:
                 is_working = False
 
-        hero.update(generator.collision_points)
+        hero.update(generator.collision_points, camera)
 
 
     pg.quit()

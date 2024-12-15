@@ -1,12 +1,12 @@
 import pygame as pg
 from pathlib import Path
 
-TILE_SIZE = (32, 32)
-PLAYER_WIDTH = 16
-PLAYER_HEIGHT = 16
+TILE_SIZE = (64, 64)
+PLAYER_WIDTH = 32
+PLAYER_HEIGHT = 32
 PLAYER_SIZE = (PLAYER_WIDTH,PLAYER_HEIGHT)
 PLAYER_COLOR = (255,0,0)
-PLAYER_MOTION_SPEED = 6
+PLAYER_MOTION_SPEED = 3
 BASE_DIR = Path(__file__).absolute().parent
 
 class Platform(pg.sprite.Sprite):
@@ -28,53 +28,65 @@ class Player(pg.sprite.Sprite):
         self.is_down = False
         
         self.images = {
-            'sit': [pg.image.load(BASE_DIR / "resources" / "images" / "cat" / "idle" / f"cat_idle{i}.png").convert_alpha() for i in range(1, 9)],
-            'walk': [pg.image.load(BASE_DIR / "resources" / "images" / "cat" / "walk" / f"cat_walk{i}.png").convert_alpha() for i in range(1, 8)]
+            'sit': [self.load_pair(BASE_DIR / "resources" / "images" / "cat" / "idle" / f"cat_idle{i}.png") for i in range(1, 9)],
+            'walk': [self.load_pair(BASE_DIR / "resources" / "images" / "cat" / "walk" / f"cat_walk{i}.png") for i in range(1, 8)]
         }
         self.current_animation = 'sit'
-        self.image = self.images[self.current_animation][0]
-        self.rect = pg.Rect(x, y, PLAYER_WIDTH, PLAYER_HEIGHT)
         self.frame_index = 0
+        self.image = self.images[self.current_animation][self.frame_index][self.get_direction()]
+        self.rect = pg.Rect(x, y, PLAYER_WIDTH, PLAYER_HEIGHT)
+
         self.animation_speed = 0.1  # Скорость анимации
         self.last_update = pg.time.get_ticks()
 
-    def update(self, c_points):
-        
-        keys = pg.key.get_pressed()
-
-        if keys[pg.K_a]:  # Движение влево
-            self.rect.x -= 5
-            self.current_animation = 'walk'
-        elif keys[pg.K_d]:  # Движение вправо
-            self.rect.x += 5
-            self.current_animation = 'walk'
+    def load_pair(self, path):
+        return pg.transform.scale(pg.transform.flip(pg.image.load(path).convert_alpha(), True, False), (PLAYER_HEIGHT*2, PLAYER_WIDTH*2)), pg.transform.scale(pg.image.load(path).convert_alpha(), (PLAYER_HEIGHT*2, PLAYER_WIDTH*2))
+    def get_direction(self):
+        if self.is_left:
+            return 0
         else:
-            self.current_animation = 'sit'
+            return 1
+    def update(self, c_points, camera):
+        pos_x= camera.camera.x
+        pos_y = camera.camera.y
 
         self.animate()
         
         if self.is_left:
             self.x_velocity = -PLAYER_MOTION_SPEED
+            pos_x += PLAYER_MOTION_SPEED
+            self.current_animation = 'walk'
 
         elif self.is_right:
             self.x_velocity = PLAYER_MOTION_SPEED
+            pos_x-= PLAYER_MOTION_SPEED
+            self.current_animation = 'walk'
 
         elif self.is_up:
             self.y_velocity = -PLAYER_MOTION_SPEED
+            pos_y += PLAYER_MOTION_SPEED
 
         elif self.is_down:
             self.y_velocity = PLAYER_MOTION_SPEED
+            pos_y -= PLAYER_MOTION_SPEED
 
         if not (self.is_left or self.is_right):
             self.x_velocity = 0
 
+            self.current_animation = 'sit'
+
         if not (self.is_up or self.is_down):
             self.y_velocity = 0
 
+
+
         self.rect.x += self.x_velocity
         self.rect.y += self.y_velocity
-
+        camera.camera.x = pos_x
+        camera.camera.y = pos_y
         self.collide(self.x_velocity, self.y_velocity, c_points)
+
+
 
     def animate(self):
         now = pg.time.get_ticks()
@@ -82,13 +94,12 @@ class Player(pg.sprite.Sprite):
             self.last_update = now
             if self.current_animation == 'walk':
                 self.frame_index = (self.frame_index + 1) % len(self.images['walk'])
-                self.image = self.images['walk'][self.frame_index]
+                self.image = self.images['walk'][self.frame_index][self.get_direction()]
             else:
-                self.frame_index = 0
-                self.image = self.images['sit'][0]
+                self.frame_index = (self.frame_index + 1) % len(self.images['sit'])
+                self.image = self.images['sit'][self.frame_index][self.get_direction()]
 
-        # Обновляем прямоугольник для отрисовки
-        self.rect = self.image.get_rect(center=self.rect.center)
+
 
     def collide(self, x_velocity, y_velocity, c_points):
         for point in c_points:

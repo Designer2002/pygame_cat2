@@ -1,20 +1,23 @@
-import pygame
+import pygame as pg
 class Camera:
-    def __init__(self, width, height):
-        self.camera = pygame.Rect(0, 0, width, height)
+    def __init__(self, width, height, surface):
+        self.camera = pg.Rect(0, 0, width, height)
         self.width = width
         self.height = height
+        self.surface = surface
 
     def apply(self, entity):
-        return entity.rect.move(self.camera.topleft)
+        # Смещаем объект относительно камеры
+        return entity.rect.move(-self.camera.x, -self.camera.y)
 
-    def update(self, target, w, h):
-        x = -target.rect.centerx + int(w / 2)
-        y = -target.rect.centery + int(h / 2)
+    def update(self, target):
+        x = -target.rect.centerx + int(self.width / 2)
+        y = -target.rect.centery + int(self.height / 2)
 
-        x = min(0, x)  # ограничиваем движение камеры по X
-        y = min(0, y)  # ограничиваем движение камеры по Y
-        x = max(-(self.width - w), x)  # ограничиваем движение камеры по X
-        y = max(-(self.height - h), y)  # ограничиваем движение камеры по Y
+        # Ограничиваем движение камеры, чтобы она не выходила за пределы уровня
+        x = min(0, x)  # Не даем камере уходить влево
+        x = max(-(self.surface.get_width() - self.width), x)  # Не даем камере уходить вправо
+        y = min(0, y)  # Не даем камере уходить вверх
+        y = max(-(self.surface.get_height() - self.height), y)  # Не даем камере уходить вниз
 
-        self.camera = pygame.Rect(x, y, self.width, self.height)
+        self.camera = pg.Rect(x, y, self.width, self.height)

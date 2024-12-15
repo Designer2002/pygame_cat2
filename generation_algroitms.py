@@ -2,6 +2,8 @@
 
 
 from random import randint
+
+import generator
 from container import Container
 from tree import Tree
 cardinal_directions = [(-1,0),(1,0),(0,-1),(0,1)]
@@ -30,6 +32,7 @@ def random_walk_corridor(start_position, length):
     for i in range(length):
         current_position = current_position + direction
         corridor = np.append(corridor, [list(current_position)], axis=0)  # Преобразуем кортеж в список и добавляем в массив
+    corridor = generator.increase_corridor_size_by_one(corridor)
     return corridor
 
 
