@@ -1,7 +1,8 @@
 from PIL import Image, ImageDraw
-from main import BASE_DIR, SCREEN_HEIGHT, SCREEN_WIDTH
+from pathlib import Path
 import pygame as pg
 def make_image(container, tile_size, components):
+    BASE_DIR = Path(__file__).absolute().parent
     img = Image.new("RGB", (container.w * tile_size[0], container.h * tile_size[1]), color = 'white')
     for key in components:
         texture = Image.open(key).convert("RGBA")

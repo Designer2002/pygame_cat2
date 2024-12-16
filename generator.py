@@ -1,9 +1,9 @@
 import math
 import random
 import generation_algroitms as g
-
+from pathlib import Path
 import image_manager
-from main import BASE_DIR
+BASE_DIR = Path(__file__).absolute().parent
 
 bush_percent = 0.7
 start_position = (0,0)

@@ -46,47 +46,45 @@ class Player(pg.sprite.Sprite):
             return 0
         else:
             return 1
-    def update(self, c_points, camera):
-        pos_x= camera.camera.x
-        pos_y = camera.camera.y
+    def update(self, c_points):
+        #pos_x= camera.camera.x
+        #pos_y = camera.camera.y
 
         self.animate()
 
         if self.is_left:
             self.x_velocity = -PLAYER_MOTION_SPEED
-            pos_x += PLAYER_MOTION_SPEED
+            #pos_x += PLAYER_MOTION_SPEED
             self.current_animation = 'walk'
 
         elif self.is_right:
             self.x_velocity = PLAYER_MOTION_SPEED
-            pos_x-= PLAYER_MOTION_SPEED
+            #pos_x-= PLAYER_MOTION_SPEED
             self.current_animation = 'walk'
 
         elif self.is_up:
             self.y_velocity = -PLAYER_MOTION_SPEED
-            pos_y += PLAYER_MOTION_SPEED
+            #pos_y += PLAYER_MOTION_SPEED
 
         elif self.is_down:
             self.y_velocity = PLAYER_MOTION_SPEED
-            pos_y -= PLAYER_MOTION_SPEED
+            #pos_y -= PLAYER_MOTION_SPEED
 
         if not (self.is_left or self.is_right):
             self.x_velocity = 0
-            pos_x = 0
+            #pos_x = 0
 
             self.current_animation = 'sit'
 
         if not (self.is_up or self.is_down):
             self.y_velocity = 0
-            pos_y = 0
+            #pos_y = 0
 
 
 
         self.rect.x += self.x_velocity
         self.rect.y += self.y_velocity
         self.collide(self.x_velocity, self.y_velocity, c_points)
-        camera.camera.x = pos_x
-        camera.camera.y = pos_y
 
 
 

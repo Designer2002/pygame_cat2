@@ -2,15 +2,10 @@ from player import Player, TILE_SIZE
 import pygame as pg
 import generator
 import tracemalloc
-from camera import Camera
-from pathlib import Path
-
-
-BASE_DIR = Path(__file__).absolute().parent
+import level
 
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 700
-SCREEN_SIZE = (SCREEN_WIDTH, SCREEN_HEIGHT)
 WHITE = (255,255,255)
 
 FPS = 60
@@ -18,23 +13,14 @@ FPS = 60
 def run():
 
     pg.init()
-    screen_surface = pg.display.set_mode(SCREEN_SIZE)
+    screen_surface = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
     timer = pg.time.Clock()
-
-
+    
     generator.run_generation(TILE_SIZE)
-    img = pg.image.load(BASE_DIR / "resources" / "images" / "map.jpg").convert()
-    img_rect = img.get_rect()
-
-    entity_sprites = pg.sprite.Group()
 
     hero = Player(generator.start[0], generator.start[1])
-
-    camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT, screen_surface)
-
-    entity_sprites.add(hero)
-
+    l = level.Level(screen_surface, hero)
     screen_surface.fill(WHITE)
 
     caption = "Cat Adventure"
@@ -57,21 +43,9 @@ def run():
 
     while is_working:
 
-        pg.display.update()
+        
         timer.tick(FPS)
-
-        screen_surface.fill(WHITE)
-
-        screen_surface.blit(img, camera.camera)
-
-        #camera.update(hero)
-
-        for sprite in entity_sprites:
-            # Используем метод apply для смещения позиции спрайта
-            screen_surface.blit(sprite.image, camera.apply(sprite))
-
-        # Отрисовка героя с учетом камеры
-        screen_surface.blit(hero.image, camera.apply(hero))
+        l.run(generator.collision_points)
 
         for event in pg.event.get():
 
@@ -109,7 +83,8 @@ def run():
             if event.type == pg.QUIT:
                 is_working = False
 
-        hero.update(generator.collision_points, camera)
+        pg.display.flip()
+        
 
 
     pg.quit()
