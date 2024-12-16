@@ -51,7 +51,7 @@ class Player(pg.sprite.Sprite):
         pos_y = camera.camera.y
 
         self.animate()
-        
+
         if self.is_left:
             self.x_velocity = -PLAYER_MOTION_SPEED
             pos_x += PLAYER_MOTION_SPEED
@@ -72,19 +72,22 @@ class Player(pg.sprite.Sprite):
 
         if not (self.is_left or self.is_right):
             self.x_velocity = 0
+            pos_x = 0
 
             self.current_animation = 'sit'
 
         if not (self.is_up or self.is_down):
             self.y_velocity = 0
+            pos_y = 0
 
 
 
         self.rect.x += self.x_velocity
         self.rect.y += self.y_velocity
+        self.collide(self.x_velocity, self.y_velocity, c_points)
         camera.camera.x = pos_x
         camera.camera.y = pos_y
-        self.collide(self.x_velocity, self.y_velocity, c_points)
+
 
 
 
@@ -102,6 +105,7 @@ class Player(pg.sprite.Sprite):
 
 
     def collide(self, x_velocity, y_velocity, c_points):
+
         for point in c_points:
             p = Platform(point[0]*TILE_SIZE[0], point[1]*TILE_SIZE[1], TILE_SIZE[0], TILE_SIZE[1])
             if pg.sprite.collide_rect(self, p):
@@ -109,18 +113,25 @@ class Player(pg.sprite.Sprite):
                     #print("collide right")
                     #print(p.rect)
                     self.rect.right = p.rect.left - TILE_SIZE[0] // 4
+
                 elif x_velocity < 0:
                     #print("collide left")
                     self.rect.left = p.rect.right + TILE_SIZE[0] // 4
+
                 elif y_velocity > 0:
                     #print("collide down")
                     self.rect.bottom = p.rect.top - TILE_SIZE[0] // 4
+
                 elif y_velocity < 0:
                     #print("collide up")
                     self.rect.top = p.rect.bottom + TILE_SIZE[0] // 4
+
             else:
                 self.x_velocity = 0
                 self.y_velocity = 0
+                pos_x = 0
+                pos_y = 0
         self.rect.x += self.x_velocity
         self.rect.y += self.y_velocity
+
 

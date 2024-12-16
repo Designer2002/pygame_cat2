@@ -90,6 +90,7 @@ def run():
                 if event.key == pg.K_d:
                     hero.is_right = True
                 if event.key == pg.K_w:
+                    print("u")
                     hero.is_up = True
                 if event.key == pg.K_s:
                     hero.is_down = True
