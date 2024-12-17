@@ -94,7 +94,7 @@ def create_corridor(current_room_center, destination):
 
     return corridor
 def connect_rooms(room_centers):
-    corridors = set()
+    corridors = []
     current_room_center = room_centers.pop(random.randint(0, len(room_centers)-1))
 
     while len(room_centers) > 0:
@@ -102,7 +102,8 @@ def connect_rooms(room_centers):
         room_centers.remove(closest)
         new_corridor = create_corridor(current_room_center, closest)
         current_room_center = closest
-        corridors |= new_corridor
+        #тут ошибка так как коридоры сливаются в единый а не остаются по разным словарям
+        corridors.append(new_corridor)
     return corridors
 
 
@@ -158,7 +159,12 @@ def create_splitted_rooms(size, c_p = collision_points, w_z=working_zone):
     room_centers = [room.leaf.center for room in rooms.get_leafs()]
 
     corridors = connect_rooms(room_centers)
-    floor |= corridors
+    for cor in corridors:
+        for point in cor:
+            floor.add(point)
+    #ОБРАТБОТКА ОШИБКИ ТУПИКА
+    if not is_connected(rooms, corridors):
+        create_exits(rooms,corridors, room_centers)
     empty_space = fill_empty_space(floor, container)
     components = make_component_for_image(floor, empty_space)
     image_manager.make_image(container, size, components)
@@ -168,11 +174,95 @@ def create_splitted_rooms(size, c_p = collision_points, w_z=working_zone):
     c_p |= empty_space
     w_z.update([(p[0] * size[0], p[1] * size[1]) for p in floor])
     start[0], start[1] = sorted(w_z, key=distance_from_start)[0]
-
+    #start[0], start[1] = move_player_to_exit((start[0],start[1]),rooms)
 
     #serializer.write(floor)
+def move_player_to_exit(player_position, rooms):
+    exit_found = False
+    for room in rooms.get_leafs():
+        room_center = room.leaf.center
+        if room_center.x != player_position[0] and room_center.y != player_position[1]:
+            # Переместите игрока в центр ближайшей комнаты
+            player_position = room_center
+            exit_found = True
+            break
+    return player_position.x, player_position.y
 
+def create_exits(rooms, corridors, room_centers):
+    isolated_rooms = []
+    for room in rooms.get_leafs():
+        room_center = room.leaf.center
+        exits = 0
+        for direction in g.cardinal_directions:
+            neighbor = (room_center.x + direction[0], room_center.y + direction[1])
+            if neighbor in corridors:
+                exits += 1
+        if exits == 0:
+            # Создайте выход в случайном направлении
+            isolated_rooms.append(room)
+    for room in isolated_rooms:
+        # Находим ближайшую соединенную комнату
+        closest = find_closest_point(room.leaf.center, room_centers)
+        if closest:
+            new_corridor = create_corridor(room, closest)
+            corridors.append(new_corridor) 
 
+def is_connected(rooms, corridors):
+    graph = {}
+    
+    # Добавляем комнаты в граф
+    for room in rooms.get_leafs():
+        room_center = (room.leaf.center.x, room.leaf.center.y)
+        graph[room_center] = []
+
+    # Добавляем коридоры в граф
+    for corridor in corridors:
+        for point in corridor:
+            if point not in graph:
+                graph[point] = []
+
+    # Соединяем коридоры с комнатами
+    for room in rooms.get_leafs():
+        room_center = (room.leaf.center.x, room.leaf.center.y)
+        for corridor in corridors:
+            for point in corridor:
+                # Если коридор находится рядом с комнатой, соединяем их
+                if is_near(room_center, point):
+                    graph[room_center].append(point)
+                    graph[point].append(room_center)
+
+    visited = set()
+
+    def dfs(node):
+        visited.add(node)
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                dfs(neighbor)
+
+    # Начинаем обход с первой комнаты
+    #start_node = (start_node = (rooms.get_leafs()[0].leaf.center.x, rooms.get_leafs()[0].leaf.center.y)
+    for room in rooms.get_leafs():
+        start_node = (room.leaf.center.x, room.leaf.center.y) = (room.leaf.center.x, room.leaf.center.y)
+        dfs(start_node)
+        break
+    
+
+    # Проверяем, что все комнаты и коридоры посещены
+    leaf_rooms = list(rooms.get_leafs())  # Convert the generator to a list
+    num_leaf_rooms = len(leaf_rooms)  # Get the number of leaf rooms
+
+    # Calculate the total number of corridor points
+    total_corridor_points = sum(len(corridor) for corridor in corridors)
+
+    # Sum the number of leaf rooms and corridor points
+    total_nodes = num_leaf_rooms + total_corridor_points
+    return len(visited) == total_nodes
+
+def is_near(room_center, point):
+    # Определяем, насколько близко коридор должен быть к комнате, чтобы считать их связанными
+    threshold = 1  # Например, если коридор находится в пределах 1 единицы от комнаты
+    return (abs(room_center[0] - point[0]) <= threshold and
+            abs(room_center[1] - point[1]) <= threshold)
 
 def fill_empty_space(floor, container):
     empty_space = set()
